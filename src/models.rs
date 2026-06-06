@@ -27,5 +27,7 @@ pub struct Device {
     pub ip: String,
     pub tcp_port: i32,
     pub udp_port: i32,
+    #[serde(default)]
+    pub ws_port: i32,
     pub last_seen: i64,
 }

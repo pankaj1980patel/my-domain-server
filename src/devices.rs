@@ -31,6 +31,8 @@ pub struct DeviceReq {
     pub ip: Option<String>,
     pub tcp_port: i32,
     pub udp_port: i32,
+    #[serde(default)]
+    pub ws_port: i32,
 }
 
 #[derive(Serialize)]
@@ -40,6 +42,7 @@ pub struct DeviceOut {
     pub ip: String,
     pub tcp_port: i32,
     pub udp_port: i32,
+    pub ws_port: i32,
     pub last_seen: i64,
 }
 
@@ -61,6 +64,7 @@ pub async fn register(
         ip,
         tcp_port: req.tcp_port,
         udp_port: req.udp_port,
+        ws_port: req.ws_port,
         last_seen: now(),
     };
     s.db.collection::<Device>(crate::models::DEVICES_COLL)
@@ -103,6 +107,7 @@ pub async fn list(
             ip: d.ip,
             tcp_port: d.tcp_port,
             udp_port: d.udp_port,
+            ws_port: d.ws_port,
             last_seen: d.last_seen,
         })
         .collect();
