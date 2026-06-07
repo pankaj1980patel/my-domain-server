@@ -14,8 +14,9 @@ use axum::{
     extract::State,
     http::StatusCode,
     routing::{get, post},
-    Router,
+    Json, Router,
 };
+use serde_json::json;
 use mongodb::bson::doc;
 use mongodb::options::IndexOptions;
 use mongodb::{IndexModel};
@@ -25,11 +26,21 @@ use tower_http::cors::CorsLayer;
 use state::AppState;
 
 /// Liveness + DB connectivity check.
-async fn health(State(s): State<AppState>) -> StatusCode {
-    match s.db.run_command(doc! { "ping": 1 }).await {
-        Ok(_) => StatusCode::OK,
-        Err(_) => StatusCode::SERVICE_UNAVAILABLE,
-    }
+async fn health(State(s): State<AppState>) -> (StatusCode, Json<serde_json::Value>) {
+    let db_ok = s.db.run_command(doc! { "ping": 1 }).await.is_ok();
+    let (status, db) = if db_ok {
+        (StatusCode::OK, "up")
+    } else {
+        (StatusCode::SERVICE_UNAVAILABLE, "down")
+    };
+    (
+        status,
+        Json(json!({
+            "service": "my-domain-registry",
+            "status": if db_ok { "ok" } else { "degraded" },
+            "db": db,
+        })),
+    )
 }
 
 #[tokio::main]
