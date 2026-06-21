@@ -74,6 +74,15 @@ pub async fn register(
         )
         .upsert(true)
         .await?;
+    // Drop stale duplicates of the same physical device (same user + hostname)
+    // left behind by older clients that used a fresh random node_id each launch.
+    s.db.collection::<Device>(crate::models::DEVICES_COLL)
+        .delete_many(doc! {
+            "user_id": &user.user_id,
+            "name": &device.name,
+            "node_id": { "$ne": &req.node_id },
+        })
+        .await?;
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
