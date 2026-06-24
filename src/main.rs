@@ -7,7 +7,9 @@
 mod auth;
 mod devices;
 mod error;
+mod fcm;
 mod models;
+mod signal;
 mod state;
 
 use axum::{
@@ -83,7 +85,11 @@ async fn main() -> anyhow::Result<()> {
         )
         .await;
 
-    let state = AppState { db, jwt_secret };
+    let fcm = fcm::FcmClient::from_env();
+    if fcm.is_none() {
+        tracing::warn!("FCM not configured (set FCM_SA_JSON or GOOGLE_APPLICATION_CREDENTIALS); /signal disabled");
+    }
+    let state = AppState { db, jwt_secret, fcm };
 
     let app = Router::new()
         .route("/health", get(health))
@@ -93,6 +99,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/devices/register", post(devices::register))
         .route("/devices", get(devices::list))
         .route("/devices/unregister", post(devices::unregister))
+        .route("/devices/state", post(devices::state))
+        .route("/devices/probe", post(devices::probe))
+        .route("/signal", post(signal::relay))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
