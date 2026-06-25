@@ -39,6 +39,7 @@ async fn health(State(s): State<AppState>) -> (StatusCode, Json<serde_json::Valu
         status,
         Json(json!({
             "service": "my-domain-registry",
+            "version": env!("CARGO_PKG_VERSION"),
             "status": if db_ok { "ok" } else { "degraded" },
             "db": db,
         })),
