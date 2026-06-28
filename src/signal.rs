@@ -58,9 +58,11 @@ pub async fn relay(
         .ok_or(AppError::Conflict("target has no FCM token (offline)".into()))?;
 
     // FCM data payloads are string→string; the typed body is stringified.
+    // NB: `from` is an FCM-reserved data key (rejected with INVALID_ARGUMENT),
+    // so the sender node id travels as `sender`.
     let data = serde_json::json!({
         "type": req.kind,
-        "from": req.from,
+        "sender": req.from,
         "to": req.to,
         "payload": req.data.to_string(),
     });
@@ -114,7 +116,7 @@ pub async fn selfping(
 
     let data = serde_json::json!({
         "type": "ping",
-        "from": req.node_id,
+        "sender": req.node_id,
         "to": req.node_id,
         "payload": format!("selfping:{}", req.sid),
     });

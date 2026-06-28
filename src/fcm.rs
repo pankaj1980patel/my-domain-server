@@ -146,7 +146,10 @@ impl FcmClient {
             return Ok(());
         }
         let txt = resp.text().await.unwrap_or_default();
-        if status.as_u16() == 404 || txt.contains("UNREGISTERED") || txt.contains("INVALID_ARGUMENT") {
+        // Only a genuinely dead token should clear the stored token. INVALID_ARGUMENT
+        // is a message-format bug on our side — surfacing it (instead of clearing a
+        // valid token) is what makes such bugs debuggable.
+        if status.as_u16() == 404 || txt.contains("UNREGISTERED") || txt.contains("NOT_FOUND") {
             return Err(FcmError::Unregistered);
         }
         Err(FcmError::Send(format!("FCM {status}: {txt}")))
