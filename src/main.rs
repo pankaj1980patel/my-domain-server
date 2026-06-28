@@ -103,6 +103,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/devices/state", post(devices::state))
         .route("/devices/probe", post(devices::probe))
         .route("/signal", post(signal::relay))
+        .route("/signal/selfping", post(signal::selfping))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
